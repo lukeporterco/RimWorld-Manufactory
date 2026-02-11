@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>lukeporter.Manufactory</packageId>
+  <name>Manufactory</name>
+  <author>Luke Porter</author>
+  <description>A mod that adds manufacturing facilities to RimWorld.</description>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+</ModMetaData>
