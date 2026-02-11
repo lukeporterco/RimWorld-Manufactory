@@ -1,0 +1,20 @@
+# OS / misc
+Thumbs.db
+.DS_Store
+
+# VS / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Build outputs
+**/bin/
+**/obj/
+
+# Compiled mod artifacts (keep GitHub source-only)
+Assemblies/*.dll
+Assemblies/*.pdb
+
+# Logs (if you ever copy them in)
+Player.log
