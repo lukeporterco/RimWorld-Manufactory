@@ -1,27 +1,31 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Patch>
-
-  <!-- Keep vanilla Concrete def, only swap specific fields -->
-
   <Operation Class="PatchOperationReplace">
-    <xpath>/Defs/TerrainDef[defName="Concrete"]/texturePath</xpath>
+    <xpath>/Defs/TerrainDef[defName="Concrete"]</xpath>
     <value>
-      <texturePath>Terrain/Surfaces/Manufactory_Concrete</texturePath>
+      <TerrainDef ParentName="FloorBase">
+        <defName>Concrete</defName>
+        <label>concrete</label>
+        <description>Rough concrete. It is cheap and quick to build, but is also quite ugly.</description>
+        <texturePath>Terrain/Surfaces/Manufactory_Concrete</texturePath>
+        <color>(140,140,140)</color>
+        <edgeType>Hard</edgeType>
+        <renderPrecedence>70</renderPrecedence>
+        <isPaintable>true</isPaintable>
+        <statBases>
+          <Beauty>-1</Beauty>
+          <WorkToBuild>100</WorkToBuild>
+          <CleaningTimeFactor>0.8</CleaningTimeFactor>
+        </statBases>
+        <costList>
+          <Steel>1</Steel>
+        </costList>
+        <designationHotKey>Misc6</designationHotKey>
+        <researchPrerequisites>
+          <li>Stonecutting</li>
+        </researchPrerequisites>
+        <uiOrder>2020</uiOrder>
+      </TerrainDef>
     </value>
   </Operation>
-
-  <Operation Class="PatchOperationReplace">
-    <xpath>/Defs/TerrainDef[defName="Concrete"]/label</xpath>
-    <value>
-      <label>manufactory concrete</label>
-    </value>
-  </Operation>
-
-  <Operation Class="PatchOperationReplace">
-    <xpath>/Defs/TerrainDef[defName="Concrete"]/description</xpath>
-    <value>
-      <description>Concrete optimized for factory construction.</description>
-    </value>
-  </Operation>
-
 </Patch>
