@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ThingDef ParentName="Wall">
+    <defName>Manufactory_WetConcreteWall</defName>
+    <label>wet concrete wall</label>
+    <description>A freshly poured concrete wall form. It will harden into a concrete wall over time.</description>
+    <graphicData>
+      <texPath>Things/Building/Manufactory/Walls/WetConcreteWall</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1,1)</drawSize>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>220</MaxHitPoints>
+      <WorkToBuild>1400</WorkToBuild>
+      <Flammability>0</Flammability>
+      <Beauty>-1</Beauty>
+    </statBases>
+    <costStuffCount>5</costStuffCount>
+    <designationCategory>Structure</designationCategory>
+    <uiOrder>2000</uiOrder>
+    <fillPercent>1</fillPercent>
+  </ThingDef>
+
+  <ThingDef ParentName="Wall">
+    <defName>Manufactory_ConcreteWall</defName>
+    <label>concrete wall</label>
+    <description>A sturdy cured concrete wall.</description>
+    <graphicData>
+      <texPath>Things/Building/Manufactory/Walls/ConcreteWall</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1,1)</drawSize>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>260</MaxHitPoints>
+      <WorkToBuild>1400</WorkToBuild>
+      <Flammability>0</Flammability>
+      <Beauty>-1</Beauty>
+    </statBases>
+    <costStuffCount>5</costStuffCount>
+    <designationCategory>Structure</designationCategory>
+    <uiOrder>2001</uiOrder>
+    <fillPercent>1</fillPercent>
+  </ThingDef>
+</Defs>
