@@ -23,6 +23,7 @@
       <Manufactory_ConcreteMix>5</Manufactory_ConcreteMix>
     </costList>
     <designationCategory>Structure</designationCategory>
+    <holdsRoof>false</holdsRoof>
     <modExtensions>
       <li Class="Manufactory.Curing.CuringSettingsExtension">
         <cureTicks>60000</cureTicks>
