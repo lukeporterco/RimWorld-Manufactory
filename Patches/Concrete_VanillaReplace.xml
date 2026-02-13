@@ -9,6 +9,7 @@
         <description>Rough concrete. It is cheap and quick to build, but is also quite ugly.</description>
         <texturePath>Terrain/Surfaces/Manufactory_Concrete</texturePath>
         <color>(0.70,0.70,0.70)</color>
+        <pathCost>-1</pathCost>
         <edgeType>Hard</edgeType>
         <renderPrecedence>70</renderPrecedence>
         <isPaintable>true</isPaintable>

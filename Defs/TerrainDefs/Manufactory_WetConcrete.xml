@@ -5,13 +5,14 @@
     <label>wet concrete</label>
     <description>Freshly poured concrete. It needs time to cure before it becomes proper concrete flooring.</description>
     <texturePath>Terrain/Surfaces/Manufactory_WetConcrete</texturePath>
-    <color>(0.60,0.60,0.60)</color>
+    <color>(0.59,0.60,0.63)</color>
+    <pathCost>13</pathCost>
     <edgeType>Hard</edgeType>
     <renderPrecedence>70</renderPrecedence>
     <isPaintable>false</isPaintable>
     <statBases>
-      <Beauty>-2</Beauty>
-      <WorkToBuild>100</WorkToBuild>
+      <Beauty>-3</Beauty>
+      <WorkToBuild>600</WorkToBuild>
       <CleaningTimeFactor>0.8</CleaningTimeFactor>
     </statBases>
     <costList>

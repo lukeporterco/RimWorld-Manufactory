@@ -8,13 +8,13 @@
       <texPath>Things/Building/Manufactory/Walls/WetConcreteWall</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(1,1)</drawSize>
-      <color>(0.60,0.60,0.60)</color>
+      <color>(0.59,0.60,0.63)</color>
     </graphicData>
     <statBases>
       <MaxHitPoints>220</MaxHitPoints>
       <WorkToBuild>1400</WorkToBuild>
       <Flammability>0</Flammability>
-      <Beauty>-1</Beauty>
+      <Beauty>-3</Beauty>
     </statBases>
     <stuffCategories Inherit="False" />
     <costStuffCount Inherit="False">0</costStuffCount>
