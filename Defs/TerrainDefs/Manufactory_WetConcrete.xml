@@ -16,7 +16,7 @@
       <CleaningTimeFactor>0.8</CleaningTimeFactor>
     </statBases>
     <costList>
-      <Steel>1</Steel>
+      <Manufactory_ConcreteMix>1</Manufactory_ConcreteMix>
     </costList>
     <designationHotKey>Misc6</designationHotKey>
     <researchPrerequisites>

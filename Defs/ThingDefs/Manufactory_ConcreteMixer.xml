@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>Manufactory_ConcreteMixer</defName>
+    <label>concrete mixer</label>
+    <description>Keeps concrete mix from setting while it is stored inside.</description>
+    <thingClass>Manufactory.ConcreteMix.Building_ConcreteMixer</thingClass>
+    <graphicData>
+      <texPath>Things/Building/Manufactory/Walls/ConcreteWall</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1,1)</drawSize>
+      <color>(0.58,0.58,0.58)</color>
+    </graphicData>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>PassThroughOnly</passability>
+    <pathCost>15</pathCost>
+    <fillPercent>0.35</fillPercent>
+    <surfaceType>Item</surfaceType>
+    <size>(1,1)</size>
+    <interactionCellOffset>(0,0,-1)</interactionCellOffset>
+    <building>
+      <isEdifice>false</isEdifice>
+    </building>
+    <statBases>
+      <MaxHitPoints>180</MaxHitPoints>
+      <WorkToBuild>1800</WorkToBuild>
+      <Mass>15</Mass>
+      <Flammability>0</Flammability>
+      <Beauty>-2</Beauty>
+    </statBases>
+    <costList>
+      <Steel>70</Steel>
+      <ComponentIndustrial>2</ComponentIndustrial>
+    </costList>
+    <designationCategory>Production</designationCategory>
+    <researchPrerequisites>
+      <li>Stonecutting</li>
+    </researchPrerequisites>
+    <comps>
+      <li Class="CompProperties_Forbiddable" />
+    </comps>
+  </ThingDef>
+</Defs>

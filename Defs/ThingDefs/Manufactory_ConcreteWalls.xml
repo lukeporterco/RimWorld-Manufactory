@@ -20,7 +20,7 @@
     <costStuffCount Inherit="False">0</costStuffCount>
     <useStuffTerrainAffordance>false</useStuffTerrainAffordance>
     <costList>
-      <Steel>5</Steel>
+      <Manufactory_ConcreteMix>5</Manufactory_ConcreteMix>
     </costList>
     <designationCategory>Structure</designationCategory>
     <modExtensions>

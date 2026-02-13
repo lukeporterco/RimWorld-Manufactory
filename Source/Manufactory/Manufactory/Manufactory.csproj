@@ -71,12 +71,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConcreteMix\Building_ConcreteMixer.cs" />
+    <Compile Include="ConcreteMix\CompConcreteMixSetting.cs" />
+    <Compile Include="ConcreteMix\CompProperties_ConcreteMixSetting.cs" />
     <Compile Include="Curing\CuringDefs.cs" />
     <Compile Include="Curing\CuringSettingsExtension.cs" />
     <Compile Include="Curing\MapComponent_CuringManager.cs" />
     <Compile Include="HarmonyInit.cs" />
     <Compile Include="Patches\Patch_TerrainGrid_SetTerrain.cs" />
     <Compile Include="Patches\Patch_Thing_SpawnSetup.cs" />
+    <Compile Include="Patches\Patch_Thing_Stacking.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

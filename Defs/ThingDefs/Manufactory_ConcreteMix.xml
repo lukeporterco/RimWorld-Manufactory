@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ThingDef ParentName="ResourceBase">
+    <defName>Manufactory_ConcreteMix</defName>
+    <label>concrete mix</label>
+    <description>A wet concrete aggregate blend. Use it quickly before it sets and becomes useless slag.</description>
+    <graphicData>
+      <texPath>Things/Item/Resource/Chemfuel</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1,1)</drawSize>
+      <color>(0.66,0.67,0.69)</color>
+    </graphicData>
+    <thingCategories>
+      <li>ResourcesRaw</li>
+    </thingCategories>
+    <tickerType>Normal</tickerType>
+    <tradeability>All</tradeability>
+    <stackLimit>75</stackLimit>
+    <statBases>
+      <MaxHitPoints>80</MaxHitPoints>
+      <Mass>0.03</Mass>
+      <MarketValue>0.8</MarketValue>
+      <Flammability>0</Flammability>
+    </statBases>
+    <comps>
+      <li Class="Manufactory.ConcreteMix.CompProperties_ConcreteMixSetting">
+        <setTicks>60000</setTicks>
+        <slagDefName>Manufactory_ConcreteSlag</slagDefName>
+        <mixerDefName>Manufactory_ConcreteMixer</mixerDefName>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="ResourceBase">
+    <defName>Manufactory_ConcreteSlag</defName>
+    <label>concrete slag</label>
+    <description>Over-set concrete mix that hardened into useless chunks.</description>
+    <graphicData>
+      <texPath>Things/Item/Resource/Chemfuel</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1,1)</drawSize>
+      <color>(0.50,0.50,0.50)</color>
+    </graphicData>
+    <thingCategories>
+      <li>ResourcesRaw</li>
+    </thingCategories>
+    <tradeability>Sellable</tradeability>
+    <stackLimit>75</stackLimit>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+      <Mass>0.04</Mass>
+      <MarketValue>0.05</MarketValue>
+      <Flammability>0</Flammability>
+    </statBases>
+  </ThingDef>
+</Defs>
