@@ -20,10 +20,11 @@
         <costList>
           <Steel>1</Steel>
         </costList>
-        <designationHotKey>Misc6</designationHotKey>
         <researchPrerequisites>
           <li>Stonecutting</li>
         </researchPrerequisites>
+        <designationCategory Inherit="False" />
+        <designationHotKey Inherit="False" />
         <uiOrder>2020</uiOrder>
       </TerrainDef>
     </value>

@@ -72,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Curing\CuringDefs.cs" />
+    <Compile Include="Curing\CuringSettingsExtension.cs" />
     <Compile Include="Curing\MapComponent_CuringManager.cs" />
     <Compile Include="HarmonyInit.cs" />
     <Compile Include="Patches\Patch_TerrainGrid_SetTerrain.cs" />

@@ -21,6 +21,11 @@
     <researchPrerequisites>
       <li>Stonecutting</li>
     </researchPrerequisites>
+    <modExtensions>
+      <li Class="Manufactory.Curing.CuringSettingsExtension">
+        <cureTicks>60000</cureTicks>
+      </li>
+    </modExtensions>
     <uiOrder>2019</uiOrder>
   </TerrainDef>
 </Defs>

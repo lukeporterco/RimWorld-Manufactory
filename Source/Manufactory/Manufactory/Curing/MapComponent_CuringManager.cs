@@ -58,7 +58,8 @@ namespace Manufactory.Curing
             int cellIndex = map.cellIndices.CellToIndex(c);
             if (!this.pendingTerrainCures.ContainsKey(cellIndex))
             {
-                this.pendingTerrainCures[cellIndex] = Find.TickManager.TicksGame + CuringDefs.CURE_TICKS;
+                int cureTicks = this.GetCureTicks(terrainDef);
+                this.pendingTerrainCures[cellIndex] = Find.TickManager.TicksGame + cureTicks;
             }
         }
 
@@ -77,7 +78,8 @@ namespace Manufactory.Curing
             int thingId = thing.thingIDNumber;
             if (!this.pendingThingCures.ContainsKey(thingId))
             {
-                this.pendingThingCures[thingId] = Find.TickManager.TicksGame + CuringDefs.CURE_TICKS;
+                int cureTicks = this.GetCureTicks(thing.def);
+                this.pendingThingCures[thingId] = Find.TickManager.TicksGame + cureTicks;
             }
         }
 
@@ -139,10 +141,21 @@ namespace Manufactory.Curing
                 .Select(pair => pair.Key)
                 .ToList();
 
+            ThingDef wetWallDef = DefDatabase<ThingDef>.GetNamedSilentFail(CuringDefs.WetConcreteWallDefName);
+            if (wetWallDef == null)
+            {
+                Log.Warning($"[Manufactory] Missing wet wall def '{CuringDefs.WetConcreteWallDefName}'.");
+                this.pendingThingCures.Clear();
+                return;
+            }
+
+            // Build an ID index from only relevant things instead of scanning all map things per due cure.
+            Dictionary<int, Thing> wetWallsById = this.BuildThingIndexForDef(wetWallDef);
+
             for (int i = 0; i < dueThingIds.Count; i++)
             {
                 int thingId = dueThingIds[i];
-                Thing wetWall = this.FindThingById(thingId);
+                wetWallsById.TryGetValue(thingId, out Thing wetWall);
 
                 if (wetWall != null &&
                     wetWall.Spawned &&
@@ -155,26 +168,50 @@ namespace Manufactory.Curing
             }
         }
 
-        private Thing FindThingById(int thingId)
+        private Dictionary<int, Thing> BuildThingIndexForDef(ThingDef def)
         {
-            List<Thing> allThings = this.map.listerThings.AllThings;
-            for (int i = 0; i < allThings.Count; i++)
+            Dictionary<int, Thing> result = new Dictionary<int, Thing>();
+            if (def == null)
             {
-                Thing thing = allThings[i];
-                if (thing != null && thing.thingIDNumber == thingId)
+                return result;
+            }
+
+            List<Thing> things = this.map.listerThings.ThingsOfDef(def);
+            for (int i = 0; i < things.Count; i++)
+            {
+                Thing thing = things[i];
+                if (thing != null)
                 {
-                    return thing;
+                    result[thing.thingIDNumber] = thing;
                 }
             }
 
-            return null;
+            return result;
+        }
+
+        private int GetCureTicks(Def wetDef)
+        {
+            CuringSettingsExtension extension = wetDef?.GetModExtension<CuringSettingsExtension>();
+            if (extension != null && extension.cureTicks > 0)
+            {
+                return extension.cureTicks;
+            }
+
+            return CuringDefs.DefaultCureTicks;
         }
 
         private void ReplaceWetWall(Thing wetWall, ThingDef curedWallDef)
         {
-            Thing curedWall = ThingMaker.MakeThing(curedWallDef, wetWall.Stuff);
+            Thing curedWall = curedWallDef.MadeFromStuff
+                ? ThingMaker.MakeThing(curedWallDef, wetWall.Stuff)
+                : ThingMaker.MakeThing(curedWallDef);
+
+            float hpPercent = wetWall.MaxHitPoints > 0
+                ? (float)wetWall.HitPoints / wetWall.MaxHitPoints
+                : 1f;
             curedWall.SetFaction(wetWall.Faction);
-            curedWall.HitPoints = Math.Min(wetWall.HitPoints, curedWall.MaxHitPoints);
+            int targetHp = GenMath.RoundRandom(hpPercent * curedWall.MaxHitPoints);
+            curedWall.HitPoints = Math.Max(1, Math.Min(targetHp, curedWall.MaxHitPoints));
 
             CompQuality wetQuality = wetWall.TryGetComp<CompQuality>();
             CompQuality curedQuality = curedWall.TryGetComp<CompQuality>();

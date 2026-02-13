@@ -15,8 +15,18 @@
       <Flammability>0</Flammability>
       <Beauty>-1</Beauty>
     </statBases>
-    <costStuffCount>5</costStuffCount>
+    <stuffCategories Inherit="False" />
+    <costStuffCount Inherit="False">0</costStuffCount>
+    <useStuffTerrainAffordance>false</useStuffTerrainAffordance>
+    <costList>
+      <Steel>5</Steel>
+    </costList>
     <designationCategory>Structure</designationCategory>
+    <modExtensions>
+      <li Class="Manufactory.Curing.CuringSettingsExtension">
+        <cureTicks>60000</cureTicks>
+      </li>
+    </modExtensions>
     <uiOrder>2000</uiOrder>
     <fillPercent>1</fillPercent>
   </ThingDef>
@@ -36,8 +46,14 @@
       <Flammability>0</Flammability>
       <Beauty>-1</Beauty>
     </statBases>
-    <costStuffCount>5</costStuffCount>
-    <designationCategory>Structure</designationCategory>
+    <stuffCategories Inherit="False" />
+    <costStuffCount Inherit="False">0</costStuffCount>
+    <useStuffTerrainAffordance>false</useStuffTerrainAffordance>
+    <costList>
+      <Steel>5</Steel>
+    </costList>
+    <designationCategory Inherit="False" />
+    <designationHotKey Inherit="False" />
     <uiOrder>2001</uiOrder>
     <fillPercent>1</fillPercent>
   </ThingDef>
