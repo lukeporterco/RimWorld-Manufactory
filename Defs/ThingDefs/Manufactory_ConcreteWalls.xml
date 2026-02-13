@@ -8,6 +8,7 @@
       <texPath>Things/Building/Manufactory/Walls/WetConcreteWall</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(1,1)</drawSize>
+      <color>(0.60,0.60,0.60)</color>
     </graphicData>
     <statBases>
       <MaxHitPoints>220</MaxHitPoints>
@@ -39,6 +40,7 @@
       <texPath>Things/Building/Manufactory/Walls/ConcreteWall</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(1,1)</drawSize>
+      <color>(0.70,0.70,0.70)</color>
     </graphicData>
     <statBases>
       <MaxHitPoints>260</MaxHitPoints>

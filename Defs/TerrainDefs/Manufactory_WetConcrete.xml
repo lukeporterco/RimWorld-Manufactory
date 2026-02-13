@@ -5,7 +5,7 @@
     <label>wet concrete</label>
     <description>Freshly poured concrete. It needs time to cure before it becomes proper concrete flooring.</description>
     <texturePath>Terrain/Surfaces/Manufactory_WetConcrete</texturePath>
-    <color>(130,130,130)</color>
+    <color>(0.60,0.60,0.60)</color>
     <edgeType>Hard</edgeType>
     <renderPrecedence>70</renderPrecedence>
     <isPaintable>false</isPaintable>
