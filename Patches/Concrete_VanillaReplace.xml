@@ -6,7 +6,7 @@
       <TerrainDef ParentName="FloorBase">
         <defName>Concrete</defName>
         <label>concrete</label>
-        <description>Rough concrete. It is cheap and quick to build, but is also quite ugly.</description>
+        <description>Rough concrete. Mainly used for industrial purposes.</description>
         <texturePath>Terrain/Surfaces/Manufactory_Concrete</texturePath>
         <color>(0.70,0.70,0.70)</color>
         <pathCost>-1</pathCost>

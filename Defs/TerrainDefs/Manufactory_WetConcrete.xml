@@ -3,7 +3,7 @@
   <TerrainDef ParentName="FloorBase">
     <defName>Manufactory_WetConcrete</defName>
     <label>wet concrete</label>
-    <description>Freshly poured concrete. It needs time to cure before it becomes proper concrete flooring.</description>
+    <description>Freshly poured concrete. It needs time to cure before it becomes proper concrete flooring. Takes about a day to cure.</description>
     <texturePath>Terrain/Surfaces/Manufactory_WetConcrete</texturePath>
     <color>(0.59,0.60,0.63)</color>
     <pathCost>13</pathCost>
