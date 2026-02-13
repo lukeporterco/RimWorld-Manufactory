@@ -5,7 +5,7 @@
     <label>concrete mix</label>
     <description>A wet concrete aggregate blend. Use it quickly before it sets and becomes useless slag.</description>
     <graphicData>
-      <texPath>Things/Item/Resource/Chemfuel</texPath>
+      <texPath>Things/Item/Resource/ConcreteMix/ConcreteMixT</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(1,1)</drawSize>
       <color>(0.66,0.67,0.69)</color>
