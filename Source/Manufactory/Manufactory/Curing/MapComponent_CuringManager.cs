@@ -83,6 +83,23 @@ namespace Manufactory.Curing
             }
         }
 
+        public bool TryGetRemainingThingCureTicks(Thing thing, out int remainingTicks)
+        {
+            remainingTicks = 0;
+            if (thing == null || thing.Map != this.map)
+            {
+                return false;
+            }
+
+            if (!this.pendingThingCures.TryGetValue(thing.thingIDNumber, out int dueTick))
+            {
+                return false;
+            }
+
+            remainingTicks = Math.Max(0, dueTick - Find.TickManager.TicksGame);
+            return true;
+        }
+
         private void ProcessTerrainCures(int currentTick)
         {
             if (this.pendingTerrainCures.Count == 0)
