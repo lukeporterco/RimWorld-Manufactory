@@ -5,7 +5,7 @@
     <label>wet concrete wall</label>
     <description>A freshly poured concrete wall form. It will harden into a concrete wall over time.</description>
     <graphicData>
-      <texPath>Things/Building/Manufactory/Walls/WetConcreteWall</texPath>
+      <texPath>Things/Building/Manufactory/Walls/ConcreteWall</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(1,1)</drawSize>
       <color>(0.59,0.60,0.63)</color>
@@ -41,7 +41,7 @@
       <texPath>Things/Building/Manufactory/Walls/ConcreteWall</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(1,1)</drawSize>
-      <color>(0.70,0.70,0.70)</color>
+      <color>(0.75,0.75,0.75)</color>
     </graphicData>
     <statBases>
       <MaxHitPoints>260</MaxHitPoints>

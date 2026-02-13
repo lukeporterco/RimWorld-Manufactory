@@ -26,7 +26,8 @@ namespace Manufactory.Patches
 
         public static void Postfix(TerrainGrid __instance, IntVec3 c, TerrainDef newTerr)
         {
-            if (newTerr == null || newTerr.defName != CuringDefs.WetConcreteTerrainDefName)
+            CuringSettingsExtension curingSettings = newTerr?.GetModExtension<CuringSettingsExtension>();
+            if (curingSettings == null || string.IsNullOrEmpty(curingSettings.curedTerrainDefName))
             {
                 return;
             }

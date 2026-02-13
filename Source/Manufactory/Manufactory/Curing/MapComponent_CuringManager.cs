@@ -50,7 +50,8 @@ namespace Manufactory.Curing
             }
 
             TerrainDef terrainDef = map.terrainGrid.TerrainAt(c);
-            if (terrainDef == null || terrainDef.defName != CuringDefs.WetConcreteTerrainDefName)
+            CuringSettingsExtension curingSettings = terrainDef?.GetModExtension<CuringSettingsExtension>();
+            if (curingSettings == null || string.IsNullOrEmpty(curingSettings.curedTerrainDefName))
             {
                 return;
             }
@@ -107,14 +108,6 @@ namespace Manufactory.Curing
                 return;
             }
 
-            TerrainDef curedTerrain = DefDatabase<TerrainDef>.GetNamedSilentFail(CuringDefs.CuredConcreteTerrainDefName);
-            if (curedTerrain == null)
-            {
-                Log.Warning($"[Manufactory] Missing cured terrain def '{CuringDefs.CuredConcreteTerrainDefName}'.");
-                this.pendingTerrainCures.Clear();
-                return;
-            }
-
             List<int> dueCellIndices = this.pendingTerrainCures
                 .Where(pair => pair.Value <= currentTick)
                 .Select(pair => pair.Key)
@@ -128,9 +121,18 @@ namespace Manufactory.Curing
                 if (cell.InBounds(this.map))
                 {
                     TerrainDef currentTerrain = this.map.terrainGrid.TerrainAt(cell);
-                    if (currentTerrain != null && currentTerrain.defName == CuringDefs.WetConcreteTerrainDefName)
+                    CuringSettingsExtension curingSettings = currentTerrain?.GetModExtension<CuringSettingsExtension>();
+                    if (curingSettings != null && !string.IsNullOrEmpty(curingSettings.curedTerrainDefName))
                     {
-                        this.map.terrainGrid.SetTerrain(cell, curedTerrain);
+                        TerrainDef curedTerrain = DefDatabase<TerrainDef>.GetNamedSilentFail(curingSettings.curedTerrainDefName);
+                        if (curedTerrain == null)
+                        {
+                            Log.Warning($"[Manufactory] Missing cured terrain def '{curingSettings.curedTerrainDefName}' for wet terrain '{currentTerrain.defName}'.");
+                        }
+                        else
+                        {
+                            this.map.terrainGrid.SetTerrain(cell, curedTerrain);
+                        }
                     }
                 }
 

@@ -4,7 +4,7 @@
     <defName>Manufactory_WetConcrete</defName>
     <label>wet concrete</label>
     <description>Freshly poured concrete. It needs time to cure before it becomes proper concrete flooring. Takes about a day to cure.</description>
-    <texturePath>Terrain/Surfaces/Manufactory_WetConcrete</texturePath>
+    <texturePath>Terrain/Surfaces/Manufactory_Concrete</texturePath>
     <color>(0.59,0.60,0.63)</color>
     <pathCost>13</pathCost>
     <edgeType>Hard</edgeType>
@@ -25,8 +25,40 @@
     <modExtensions>
       <li Class="Manufactory.Curing.CuringSettingsExtension">
         <cureTicks>60000</cureTicks>
+        <curedTerrainDefName>Concrete</curedTerrainDefName>
       </li>
     </modExtensions>
     <uiOrder>2019</uiOrder>
+  </TerrainDef>
+
+  <TerrainDef ParentName="FloorBase">
+    <defName>Manufactory_WetConcretePaved</defName>
+    <label>wet paved concrete</label>
+    <description>Freshly poured paved concrete. It needs time to cure before it becomes paved tile flooring. Takes about a day to cure.</description>
+    <texturePath>Terrain/Surfaces/Manufactory_Concrete_Lined</texturePath>
+    <color>(0.59,0.60,0.63)</color>
+    <pathCost>13</pathCost>
+    <edgeType>Hard</edgeType>
+    <renderPrecedence>70</renderPrecedence>
+    <isPaintable>false</isPaintable>
+    <statBases>
+      <Beauty>-3</Beauty>
+      <WorkToBuild>600</WorkToBuild>
+      <CleaningTimeFactor>0.8</CleaningTimeFactor>
+    </statBases>
+    <costList>
+      <Manufactory_ConcreteMix>2</Manufactory_ConcreteMix>
+    </costList>
+    <designationHotKey>Misc6</designationHotKey>
+    <researchPrerequisites>
+      <li>Stonecutting</li>
+    </researchPrerequisites>
+    <modExtensions>
+      <li Class="Manufactory.Curing.CuringSettingsExtension">
+        <cureTicks>60000</cureTicks>
+        <curedTerrainDefName>PavedTile</curedTerrainDefName>
+      </li>
+    </modExtensions>
+    <uiOrder>2021</uiOrder>
   </TerrainDef>
 </Defs>
