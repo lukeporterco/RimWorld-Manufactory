@@ -12,7 +12,7 @@ Thumbs.db
 **/bin/
 **/obj/
 
-# Compiled mod artifacts (keep GitHub source-only)
+# Compiled mod artifacts
 Assemblies/*.dll
 Assemblies/*.pdb
 
