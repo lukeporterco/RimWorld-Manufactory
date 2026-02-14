@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Manufactory.Diagnostics;
 using RimWorld;
 using Verse;
 
@@ -8,8 +8,15 @@ namespace Manufactory.Curing
 {
     public class MapComponent_CuringManager : MapComponent
     {
+        private readonly List<int> dueTerrainBuffer = new List<int>();
+        private readonly List<int> dueThingBuffer = new List<int>();
+        private readonly Dictionary<int, Thing> wetWallsById = new Dictionary<int, Thing>();
+        private readonly Dictionary<string, TerrainDef> curedTerrainCache = new Dictionary<string, TerrainDef>();
+
         private Dictionary<int, int> pendingTerrainCures = new Dictionary<int, int>();
         private Dictionary<int, int> pendingThingCures = new Dictionary<int, int>();
+        private ThingDef wetWallDefCached;
+        private ThingDef curedWallDefCached;
 
         public MapComponent_CuringManager(Map map) : base(map)
         {
@@ -24,22 +31,31 @@ namespace Manufactory.Curing
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
-                if (this.pendingTerrainCures == null) this.pendingTerrainCures = new Dictionary<int, int>();
-                if (this.pendingThingCures == null) this.pendingThingCures = new Dictionary<int, int>();
+                if (this.pendingTerrainCures == null)
+                {
+                    this.pendingTerrainCures = new Dictionary<int, int>();
+                }
 
+                if (this.pendingThingCures == null)
+                {
+                    this.pendingThingCures = new Dictionary<int, int>();
+                }
+
+                this.ReconcileLoadedWetWalls();
             }
         }
 
         public override void MapComponentTick()
         {
             int currentTick = Find.TickManager.TicksGame;
-            if (currentTick % 250 != 0)
+            if ((currentTick + this.map.uniqueID) % 250 != 0)
             {
                 return;
             }
 
             this.ProcessTerrainCures(currentTick);
             this.ProcessThingCures(currentTick);
+            ManufactoryPerf.ReportIfDue(currentTick);
         }
 
         public void RegisterWetTerrain(Map map, IntVec3 c)
@@ -71,7 +87,8 @@ namespace Manufactory.Curing
                 return;
             }
 
-            if (thing.def?.defName != CuringDefs.WetConcreteWallDefName)
+            ThingDef wetWallDef = this.GetWetWallDef();
+            if (wetWallDef == null || thing.def != wetWallDef)
             {
                 return;
             }
@@ -103,109 +120,187 @@ namespace Manufactory.Curing
 
         private void ProcessTerrainCures(int currentTick)
         {
-            if (this.pendingTerrainCures.Count == 0)
+            long perfStamp = ManufactoryPerf.Begin();
+            try
             {
-                return;
-            }
-
-            List<int> dueCellIndices = this.pendingTerrainCures
-                .Where(pair => pair.Value <= currentTick)
-                .Select(pair => pair.Key)
-                .ToList();
-
-            for (int i = 0; i < dueCellIndices.Count; i++)
-            {
-                int cellIndex = dueCellIndices[i];
-                IntVec3 cell = CellIndicesUtility.IndexToCell(cellIndex, this.map.Size.x);
-
-                if (cell.InBounds(this.map))
+                if (this.pendingTerrainCures.Count == 0)
                 {
-                    TerrainDef currentTerrain = this.map.terrainGrid.TerrainAt(cell);
-                    CuringSettingsExtension curingSettings = currentTerrain?.GetModExtension<CuringSettingsExtension>();
-                    if (curingSettings != null && !string.IsNullOrEmpty(curingSettings.curedTerrainDefName))
+                    return;
+                }
+
+                this.dueTerrainBuffer.Clear();
+                foreach (KeyValuePair<int, int> pair in this.pendingTerrainCures)
+                {
+                    if (pair.Value <= currentTick)
                     {
-                        TerrainDef curedTerrain = DefDatabase<TerrainDef>.GetNamedSilentFail(curingSettings.curedTerrainDefName);
-                        if (curedTerrain == null)
-                        {
-                            Log.Warning($"[Manufactory] Missing cured terrain def '{curingSettings.curedTerrainDefName}' for wet terrain '{currentTerrain.defName}'.");
-                        }
-                        else
-                        {
-                            this.map.terrainGrid.SetTerrain(cell, curedTerrain);
-                        }
+                        this.dueTerrainBuffer.Add(pair.Key);
                     }
                 }
 
-                this.pendingTerrainCures.Remove(cellIndex);
+                for (int i = 0; i < this.dueTerrainBuffer.Count; i++)
+                {
+                    int cellIndex = this.dueTerrainBuffer[i];
+                    IntVec3 cell = CellIndicesUtility.IndexToCell(cellIndex, this.map.Size.x);
+
+                    if (cell.InBounds(this.map))
+                    {
+                        TerrainDef currentTerrain = this.map.terrainGrid.TerrainAt(cell);
+                        CuringSettingsExtension curingSettings = currentTerrain?.GetModExtension<CuringSettingsExtension>();
+                        if (curingSettings != null && !string.IsNullOrEmpty(curingSettings.curedTerrainDefName))
+                        {
+                            TerrainDef curedTerrain = this.GetCuredTerrainDef(curingSettings.curedTerrainDefName);
+                            if (curedTerrain == null)
+                            {
+                                Log.Warning($"[Manufactory] Missing cured terrain def '{curingSettings.curedTerrainDefName}' for wet terrain '{currentTerrain.defName}'.");
+                            }
+                            else
+                            {
+                                this.map.terrainGrid.SetTerrain(cell, curedTerrain);
+                            }
+                        }
+                    }
+
+                    this.pendingTerrainCures.Remove(cellIndex);
+                }
+            }
+            finally
+            {
+                ManufactoryPerf.End("MapComponent_CuringManager.ProcessTerrainCures", perfStamp);
             }
         }
 
         private void ProcessThingCures(int currentTick)
         {
-            if (this.pendingThingCures.Count == 0)
+            long perfStamp = ManufactoryPerf.Begin();
+            try
             {
-                return;
-            }
-
-            ThingDef curedWallDef = DefDatabase<ThingDef>.GetNamedSilentFail(CuringDefs.CuredConcreteWallDefName);
-            if (curedWallDef == null)
-            {
-                Log.Warning($"[Manufactory] Missing cured wall def '{CuringDefs.CuredConcreteWallDefName}'.");
-                this.pendingThingCures.Clear();
-                return;
-            }
-
-            List<int> dueThingIds = this.pendingThingCures
-                .Where(pair => pair.Value <= currentTick)
-                .Select(pair => pair.Key)
-                .ToList();
-
-            ThingDef wetWallDef = DefDatabase<ThingDef>.GetNamedSilentFail(CuringDefs.WetConcreteWallDefName);
-            if (wetWallDef == null)
-            {
-                Log.Warning($"[Manufactory] Missing wet wall def '{CuringDefs.WetConcreteWallDefName}'.");
-                this.pendingThingCures.Clear();
-                return;
-            }
-
-            // Build an ID index from only relevant things instead of scanning all map things per due cure.
-            Dictionary<int, Thing> wetWallsById = this.BuildThingIndexForDef(wetWallDef);
-
-            for (int i = 0; i < dueThingIds.Count; i++)
-            {
-                int thingId = dueThingIds[i];
-                wetWallsById.TryGetValue(thingId, out Thing wetWall);
-
-                if (wetWall != null &&
-                    wetWall.Spawned &&
-                    wetWall.def?.defName == CuringDefs.WetConcreteWallDefName)
+                if (this.pendingThingCures.Count == 0)
                 {
-                    this.ReplaceWetWall(wetWall, curedWallDef);
+                    return;
                 }
 
-                this.pendingThingCures.Remove(thingId);
+                ThingDef curedWallDef = this.GetCuredWallDef();
+                if (curedWallDef == null)
+                {
+                    Log.Warning($"[Manufactory] Missing cured wall def '{CuringDefs.CuredConcreteWallDefName}'.");
+                    this.pendingThingCures.Clear();
+                    return;
+                }
+
+                this.dueThingBuffer.Clear();
+                foreach (KeyValuePair<int, int> pair in this.pendingThingCures)
+                {
+                    if (pair.Value <= currentTick)
+                    {
+                        this.dueThingBuffer.Add(pair.Key);
+                    }
+                }
+
+                if (this.dueThingBuffer.Count == 0)
+                {
+                    return;
+                }
+
+                ThingDef wetWallDef = this.GetWetWallDef();
+                if (wetWallDef == null)
+                {
+                    Log.Warning($"[Manufactory] Missing wet wall def '{CuringDefs.WetConcreteWallDefName}'.");
+                    this.pendingThingCures.Clear();
+                    return;
+                }
+
+                this.wetWallsById.Clear();
+                List<Thing> wetWalls = this.map.listerThings.ThingsOfDef(wetWallDef);
+                for (int i = 0; i < wetWalls.Count; i++)
+                {
+                    Thing wetWall = wetWalls[i];
+                    if (wetWall != null)
+                    {
+                        this.wetWallsById[wetWall.thingIDNumber] = wetWall;
+                    }
+                }
+
+                for (int i = 0; i < this.dueThingBuffer.Count; i++)
+                {
+                    int thingId = this.dueThingBuffer[i];
+                    this.wetWallsById.TryGetValue(thingId, out Thing wetWall);
+
+                    if (wetWall != null && wetWall.Spawned && wetWall.def == wetWallDef)
+                    {
+                        this.ReplaceWetWall(wetWall, curedWallDef);
+                    }
+
+                    this.pendingThingCures.Remove(thingId);
+                }
+            }
+            finally
+            {
+                ManufactoryPerf.End("MapComponent_CuringManager.ProcessThingCures", perfStamp);
             }
         }
 
-        private Dictionary<int, Thing> BuildThingIndexForDef(ThingDef def)
+        private void ReconcileLoadedWetWalls()
         {
-            Dictionary<int, Thing> result = new Dictionary<int, Thing>();
-            if (def == null)
+            ThingDef wetWallDef = this.GetWetWallDef();
+            if (wetWallDef == null)
             {
-                return result;
+                return;
             }
 
-            List<Thing> things = this.map.listerThings.ThingsOfDef(def);
-            for (int i = 0; i < things.Count; i++)
+            int currentTick = Find.TickManager?.TicksGame ?? 0;
+            int dueTick = currentTick + this.GetCureTicks(wetWallDef);
+            List<Thing> wetWalls = this.map.listerThings.ThingsOfDef(wetWallDef);
+            for (int i = 0; i < wetWalls.Count; i++)
             {
-                Thing thing = things[i];
-                if (thing != null)
+                Thing wetWall = wetWalls[i];
+                if (wetWall == null)
                 {
-                    result[thing.thingIDNumber] = thing;
+                    continue;
+                }
+
+                int thingId = wetWall.thingIDNumber;
+                if (!this.pendingThingCures.ContainsKey(thingId))
+                {
+                    this.pendingThingCures[thingId] = dueTick;
                 }
             }
+        }
 
-            return result;
+        private TerrainDef GetCuredTerrainDef(string defName)
+        {
+            if (string.IsNullOrEmpty(defName))
+            {
+                return null;
+            }
+
+            if (this.curedTerrainCache.TryGetValue(defName, out TerrainDef cached))
+            {
+                return cached;
+            }
+
+            TerrainDef terrainDef = DefDatabase<TerrainDef>.GetNamedSilentFail(defName);
+            this.curedTerrainCache[defName] = terrainDef;
+            return terrainDef;
+        }
+
+        private ThingDef GetWetWallDef()
+        {
+            if (this.wetWallDefCached == null)
+            {
+                this.wetWallDefCached = DefDatabase<ThingDef>.GetNamedSilentFail(CuringDefs.WetConcreteWallDefName);
+            }
+
+            return this.wetWallDefCached;
+        }
+
+        private ThingDef GetCuredWallDef()
+        {
+            if (this.curedWallDefCached == null)
+            {
+                this.curedWallDefCached = DefDatabase<ThingDef>.GetNamedSilentFail(CuringDefs.CuredConcreteWallDefName);
+            }
+
+            return this.curedWallDefCached;
         }
 
         private int GetCureTicks(Def wetDef)

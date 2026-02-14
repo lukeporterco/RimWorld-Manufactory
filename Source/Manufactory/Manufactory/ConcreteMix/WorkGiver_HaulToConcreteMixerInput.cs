@@ -1,5 +1,6 @@
 using System;
 using Manufactory.Curing;
+using Manufactory.Diagnostics;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -19,50 +20,76 @@ namespace Manufactory.ConcreteMix
 
         public override bool HasJobOnThing(Pawn pawn, Thing t, bool forced = false)
         {
-            if (!(t is Building_ConcreteMixer mixer)
-                || mixer.IsForbidden(pawn)
-                || !pawn.CanReserve(mixer, 1, -1, null, forced)
-                || !pawn.CanReach(mixer, PathEndMode.ClosestTouch, pawn.NormalMaxDanger()))
+            long perfStamp = ManufactoryPerf.Begin();
+            try
             {
-                return false;
-            }
+                if (!(t is Building_ConcreteMixer mixer)
+                    || mixer.IsForbidden(pawn)
+                    || !pawn.CanReserve(mixer, 1, -1, null, forced)
+                    || !pawn.CanReach(mixer, PathEndMode.ClosestTouch, pawn.NormalMaxDanger()))
+                {
+                    return false;
+                }
 
-            CompConcreteMixerFermenter fermenter = mixer.GetComp<CompConcreteMixerFermenter>();
-            if (fermenter == null || !fermenter.ProductionEnabled)
+                CompConcreteMixerFermenter fermenter = mixer.GetComp<CompConcreteMixerFermenter>();
+                if (fermenter == null || !fermenter.ProductionEnabled)
+                {
+                    return false;
+                }
+
+                int neededFuel = fermenter.NeededChemfuelCount();
+                int neededChunks = fermenter.NeededChunkCount();
+                if (neededFuel <= 0 && neededChunks <= 0)
+                {
+                    return false;
+                }
+
+                return this.MapHasPotentialIngredients(pawn.Map, neededFuel > 0, neededChunks > 0);
+            }
+            finally
             {
-                return false;
+                ManufactoryPerf.End("WorkGiver_HaulToConcreteMixerInput.HasJobOnThing", perfStamp);
             }
-
-            return this.FindIngredientForMixer(pawn, mixer, fermenter, forced, out _, out _);
         }
 
         public override Job JobOnThing(Pawn pawn, Thing t, bool forced = false)
         {
-            if (!(t is Building_ConcreteMixer mixer))
+            long perfStamp = ManufactoryPerf.Begin();
+            try
             {
-                return null;
-            }
+                if (!(t is Building_ConcreteMixer mixer)
+                    || mixer.IsForbidden(pawn)
+                    || !pawn.CanReserve(mixer, 1, -1, null, forced)
+                    || !pawn.CanReach(mixer, PathEndMode.ClosestTouch, pawn.NormalMaxDanger()))
+                {
+                    return null;
+                }
 
-            CompConcreteMixerFermenter fermenter = mixer.GetComp<CompConcreteMixerFermenter>();
-            if (fermenter == null || !fermenter.ProductionEnabled)
+                CompConcreteMixerFermenter fermenter = mixer.GetComp<CompConcreteMixerFermenter>();
+                if (fermenter == null || !fermenter.ProductionEnabled)
+                {
+                    return null;
+                }
+
+                if (!this.FindIngredientForMixer(pawn, mixer, fermenter, forced, out Thing ingredient, out int count))
+                {
+                    return null;
+                }
+
+                JobDef jobDef = HaulJobDef;
+                if (jobDef == null)
+                {
+                    return null;
+                }
+
+                Job job = JobMaker.MakeJob(jobDef, ingredient, mixer);
+                job.count = Math.Max(1, Math.Min(ingredient.stackCount, count));
+                return job;
+            }
+            finally
             {
-                return null;
+                ManufactoryPerf.End("WorkGiver_HaulToConcreteMixerInput.JobOnThing", perfStamp);
             }
-
-            if (!this.FindIngredientForMixer(pawn, mixer, fermenter, forced, out Thing ingredient, out int count))
-            {
-                return null;
-            }
-
-            JobDef jobDef = HaulJobDef;
-            if (jobDef == null)
-            {
-                return null;
-            }
-
-            Job job = JobMaker.MakeJob(jobDef, ingredient, mixer);
-            job.count = Math.Max(1, Math.Min(ingredient.stackCount, count));
-            return job;
         }
 
         private static ThingDef MixerDef
@@ -114,7 +141,7 @@ namespace Manufactory.ConcreteMix
                 {
                     best = fuel;
                     bestCount = Math.Min(neededFuel, fuel.stackCount);
-                    bestDistance = (fuel.Position - pawn.Position).LengthHorizontalSquared;
+                    bestDistance = (fuel.Position - mixer.Position).LengthHorizontalSquared;
                 }
             }
 
@@ -124,7 +151,7 @@ namespace Manufactory.ConcreteMix
                 Thing chunk = this.FindClosestIngredient(pawn, mixer.Position, ThingRequest.ForGroup(ThingRequestGroup.Chunk), forced);
                 if (chunk != null && chunk.def.IsWithinCategory(ThingCategoryDefOf.StoneChunks))
                 {
-                    float chunkDistance = (chunk.Position - pawn.Position).LengthHorizontalSquared;
+                    float chunkDistance = (chunk.Position - mixer.Position).LengthHorizontalSquared;
                     if (best == null || chunkDistance < bestDistance)
                     {
                         best = chunk;
@@ -154,6 +181,18 @@ namespace Manufactory.ConcreteMix
                 TraverseParms.For(pawn, pawn.NormalMaxDanger()),
                 9999f,
                 thing => this.IsValidIngredientForPawn(pawn, thing, forced));
+        }
+
+        private bool MapHasPotentialIngredients(Map map, bool needsFuel, bool needsChunks)
+        {
+            if (map == null)
+            {
+                return false;
+            }
+
+            bool hasFuel = needsFuel && map.listerThings.ThingsOfDef(ThingDefOf.Chemfuel).Count > 0;
+            bool hasChunks = needsChunks && map.listerThings.ThingsInGroup(ThingRequestGroup.Chunk).Count > 0;
+            return hasFuel || hasChunks;
         }
 
         private bool IsValidIngredientForPawn(Pawn pawn, Thing thing, bool forced)

@@ -67,7 +67,7 @@
         <chunkPerBatch>1</chunkPerBatch>
         <chemfuelPerBatch>5</chemfuelPerBatch>
         <maxInputChunks>5</maxInputChunks>
-        <maxInputChemfuel>20</maxInputChemfuel>
+        <maxInputChemfuel>25</maxInputChemfuel>
         <maxMixCapacity>200</maxMixCapacity>
         <outputDefName>Manufactory_ConcreteMix</outputDefName>
       </li>

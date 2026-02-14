@@ -2,6 +2,7 @@
 <Defs>
   <ThingDef ParentName="ResourceBase">
     <defName>Manufactory_ConcreteMix</defName>
+    <thingClass>Manufactory.ConcreteMix.Thing_ConcreteMix</thingClass>
     <label>concrete mix</label>
     <description>A wet concrete aggregate blend. Use it quickly before it sets and becomes useless slag.</description>
     <graphicData>

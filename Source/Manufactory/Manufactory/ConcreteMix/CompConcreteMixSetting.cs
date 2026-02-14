@@ -1,4 +1,5 @@
 using System;
+using Manufactory.Diagnostics;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -7,6 +8,7 @@ namespace Manufactory.ConcreteMix
 {
     public class CompConcreteMixSetting : ThingComp
     {
+        private const int UpdateIntervalTicks = 30;
         private int settingTicks;
         private int lastUpdateTick = -1;
 
@@ -32,47 +34,60 @@ namespace Manufactory.ConcreteMix
         public override void CompTick()
         {
             base.CompTick();
-
-            if (this.parent.Destroyed)
+            long perfStamp = ManufactoryPerf.Begin();
+            try
             {
-                return;
-            }
-
-            int currentTick = Find.TickManager.TicksGame;
-            if (this.lastUpdateTick < 0)
-            {
-                this.lastUpdateTick = currentTick;
-                return;
-            }
-
-            int elapsedTicks = currentTick - this.lastUpdateTick;
-            if (elapsedTicks <= 0)
-            {
-                return;
-            }
-
-            this.lastUpdateTick = currentTick;
-
-            if (this.IsStoredInMixerStorage())
-            {
-                if (this.settingTicks > 0)
+                if (this.parent.Destroyed)
                 {
-                    this.settingTicks = Math.Max(0, this.settingTicks - elapsedTicks);
+                    return;
                 }
 
-                return;
-            }
+                if (!this.parent.IsHashIntervalTick(UpdateIntervalTicks))
+                {
+                    return;
+                }
 
-            if (this.settingTicks >= this.GetSetTicks())
-            {
-                this.ConvertIntoSlag();
-                return;
-            }
+                int currentTick = Find.TickManager.TicksGame;
+                if (this.lastUpdateTick < 0)
+                {
+                    this.lastUpdateTick = currentTick;
+                    return;
+                }
 
-            this.settingTicks = Math.Min(this.GetSetTicks(), this.settingTicks + elapsedTicks);
-            if (this.settingTicks >= this.GetSetTicks())
+                int elapsedTicks = currentTick - this.lastUpdateTick;
+                if (elapsedTicks <= 0)
+                {
+                    return;
+                }
+
+                this.lastUpdateTick = currentTick;
+                int setTicks = this.GetSetTicks();
+
+                if (this.IsStoredInMixerStorage())
+                {
+                    if (this.settingTicks > 0)
+                    {
+                        this.settingTicks = Math.Max(0, this.settingTicks - elapsedTicks);
+                    }
+
+                    return;
+                }
+
+                if (this.settingTicks >= setTicks)
+                {
+                    this.ConvertIntoSlag();
+                    return;
+                }
+
+                this.settingTicks = Math.Min(setTicks, this.settingTicks + elapsedTicks);
+                if (this.settingTicks >= setTicks)
+                {
+                    this.ConvertIntoSlag();
+                }
+            }
+            finally
             {
-                this.ConvertIntoSlag();
+                ManufactoryPerf.End("CompConcreteMixSetting.CompTick", perfStamp);
             }
         }
 
@@ -165,17 +180,6 @@ namespace Manufactory.ConcreteMix
                     slag.Destroy(DestroyMode.Vanish);
                 }
             }
-        }
-
-        private void TryDropOrDestroy(Thing thing, IntVec3 position, Map map)
-        {
-            if (map != null && position.IsValid && position.InBounds(map))
-            {
-                GenPlace.TryPlaceThing(thing, position, map, ThingPlaceMode.Near);
-                return;
-            }
-
-            thing.Destroy(DestroyMode.Vanish);
         }
 
         private bool IsStoredInMixerStorage()

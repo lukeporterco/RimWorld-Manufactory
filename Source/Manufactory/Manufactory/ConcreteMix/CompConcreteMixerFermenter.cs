@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Manufactory.Diagnostics;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -8,25 +9,38 @@ namespace Manufactory.ConcreteMix
 {
     public class CompConcreteMixerFermenter : ThingComp, IThingHolder
     {
+        private const int ProcessIntervalTicks = 30;
+        private const int StorageScanIntervalTicks = 120;
+
         private ThingOwner<Thing> inputBay;
         private ThingOwner<Thing> mixStore;
         private int ticksRemaining;
         private int pendingMixOutput;
         private bool productionEnabled = true;
 
+        private int lastProcessTick = -1;
+        private int nextStorageScanTick;
+        private int cachedStoredMixCount;
+        private int cachedMaxMixCapacity;
+        private ThingDef cachedOutputDef;
+
         public CompProperties_ConcreteMixerFermenter Props => (CompProperties_ConcreteMixerFermenter)this.props;
         public bool ProductionEnabled => this.productionEnabled;
-        public int StoredMixCount => this.CountStoredMixInMixerStorage();
+        public int StoredMixCount => this.GetCachedStoredMixCount();
         public bool Active => this.ticksRemaining > 0;
-        public int TotalMixEquivalent => this.StoredMixCount + this.CountMixInStore() + this.pendingMixOutput + this.GetPotentialMixFromInputs();
+        public int TotalMixEquivalent => this.GetCachedStoredMixCount() + this.CountMixInStore() + this.pendingMixOutput + this.GetPotentialMixFromInputs();
 
         IThingHolder IThingHolder.ParentHolder => (IThingHolder)this.parent;
+
+        private ThingDef OutputDefCached => this.cachedOutputDef
+            ?? (this.cachedOutputDef = DefDatabase<ThingDef>.GetNamedSilentFail(this.Props.outputDefName));
 
         public override void Initialize(CompProperties props)
         {
             base.Initialize(props);
             this.inputBay = new ThingOwner<Thing>(this);
             this.mixStore = new ThingOwner<Thing>(this);
+            this.InvalidateStorageCache();
         }
 
         public override void PostExposeData()
@@ -52,30 +66,67 @@ namespace Manufactory.ConcreteMix
 
                 this.ticksRemaining = Math.Max(0, this.ticksRemaining);
                 this.pendingMixOutput = Math.Max(0, this.pendingMixOutput);
+                this.lastProcessTick = -1;
+                this.cachedOutputDef = null;
+                this.InvalidateStorageCache();
             }
         }
 
         public override void CompTick()
         {
             base.CompTick();
-
-            if (!(this.parent is Building_ConcreteMixer mixer) || !mixer.IsReversalPowered() || !this.productionEnabled)
+            long perfStamp = ManufactoryPerf.Begin();
+            try
             {
-                return;
-            }
-
-            if (this.ticksRemaining > 0)
-            {
-                this.ticksRemaining--;
-                if (this.ticksRemaining <= 0 && this.pendingMixOutput > 0)
+                if (!(this.parent is Building_ConcreteMixer mixer))
                 {
-                    this.CompleteBatch();
+                    return;
+                }
+
+                int currentTick = Find.TickManager.TicksGame;
+                if (!mixer.IsReversalPowered() || !this.productionEnabled)
+                {
+                    this.lastProcessTick = currentTick;
+                    return;
+                }
+
+                if (this.lastProcessTick < 0)
+                {
+                    this.lastProcessTick = currentTick;
+                    return;
+                }
+
+                int elapsedTicks = currentTick - this.lastProcessTick;
+                if (elapsedTicks <= 0)
+                {
+                    return;
+                }
+
+                if (elapsedTicks < ProcessIntervalTicks &&
+                    (this.ticksRemaining <= 0 || this.ticksRemaining > ProcessIntervalTicks))
+                {
+                    return;
+                }
+
+                this.lastProcessTick = currentTick;
+
+                if (this.ticksRemaining > 0)
+                {
+                    this.ticksRemaining -= elapsedTicks;
+                    if (this.ticksRemaining <= 0 && this.pendingMixOutput > 0)
+                    {
+                        this.CompleteBatch();
+                    }
+                }
+
+                if (this.ticksRemaining <= 0 && this.CanStartBatch())
+                {
+                    this.StartBatch();
                 }
             }
-
-            if (this.ticksRemaining <= 0 && this.CanStartBatch())
+            finally
             {
-                this.StartBatch();
+                ManufactoryPerf.End("CompConcreteMixerFermenter.CompTick", perfStamp);
             }
         }
 
@@ -83,12 +134,14 @@ namespace Manufactory.ConcreteMix
         {
             int chunks = this.CountInputChunks();
             int fuel = this.CountInputChemfuel();
+            int storedMix = this.GetCachedStoredMixCount();
+            int maxCapacity = this.GetCachedMaxMixCapacity();
 
             string progress = this.ticksRemaining > 0
                 ? (1f - ((float)this.ticksRemaining / Math.Max(1, this.Props.batchDurationTicks))).ToStringPercent()
                 : "idle";
 
-            return $"Stored mix: {this.StoredMixCount} / {this.GetMaxMixCapacity()}\nInputs: chunks {chunks}/{this.GetMaxInputChunks()}, chemfuel {fuel}/{this.GetMaxInputChemfuel()}\nProgress: {progress}\nProduction: {(this.productionEnabled ? "enabled" : "disabled")}";
+            return $"Stored mix: {storedMix} / {maxCapacity}\nInputs: chunks {chunks}/{this.GetMaxInputChunks()}, chemfuel {fuel}/{this.GetMaxInputChemfuel()}\nProgress: {progress}\nProduction: {(this.productionEnabled ? "enabled" : "disabled")}";
         }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
@@ -98,7 +151,11 @@ namespace Manufactory.ConcreteMix
                 defaultLabel = "Toggle mix production",
                 defaultDesc = "Enable or disable automatic concrete mix production. Mix setting reversal remains independent.",
                 isActive = () => this.productionEnabled,
-                toggleAction = delegate { this.productionEnabled = !this.productionEnabled; }
+                toggleAction = delegate
+                {
+                    this.productionEnabled = !this.productionEnabled;
+                    this.lastProcessTick = Find.TickManager?.TicksGame ?? this.lastProcessTick;
+                }
             };
 
             yield return new Command_Action
@@ -136,12 +193,15 @@ namespace Manufactory.ConcreteMix
             {
                 this.TryDropAllContentsToMap(map);
             }
+
+            this.InvalidateStorageCache();
         }
 
         public override void PostDestroy(DestroyMode mode, Map previousMap)
         {
             base.PostDestroy(mode, previousMap);
             this.TryDropAllContentsToMap(previousMap);
+            this.InvalidateStorageCache();
         }
 
         public bool WantsIngredient(ThingDef def)
@@ -206,10 +266,28 @@ namespace Manufactory.ConcreteMix
                 return movedCount > 0;
             }
 
-            Thing moved = transferCount == ingredient.stackCount ? ingredient : ingredient.SplitOff(transferCount);
+            if (transferCount == ingredient.stackCount)
+            {
+                return this.inputBay.TryAdd(ingredient);
+            }
+
+            Map mapHeld = ingredient.MapHeld;
+            IntVec3 positionHeld = ingredient.PositionHeld;
+            Thing moved = ingredient.SplitOff(transferCount);
             if (this.inputBay.TryAdd(moved))
             {
                 return true;
+            }
+
+            if (!ingredient.Destroyed && !moved.Destroyed && ingredient.TryAbsorbStack(moved, true))
+            {
+                return false;
+            }
+
+            if (!moved.Destroyed && mapHeld != null && positionHeld.IsValid && positionHeld.InBounds(mapHeld))
+            {
+                GenPlace.TryPlaceThing(moved, positionHeld, mapHeld, ThingPlaceMode.Near);
+                return false;
             }
 
             if (!moved.Destroyed)
@@ -238,6 +316,7 @@ namespace Manufactory.ConcreteMix
             }
 
             this.mixStore.TryDropAll(this.GetDropCell(), this.parent.Map, ThingPlaceMode.Near);
+            this.InvalidateStorageCache();
         }
 
         public ThingOwner GetDirectlyHeldThings()
@@ -266,8 +345,8 @@ namespace Manufactory.ConcreteMix
                 return false;
             }
 
-            int currentProduced = this.StoredMixCount + this.CountMixInStore() + this.pendingMixOutput;
-            if (currentProduced + this.GetMixPerBatch() > this.GetMaxMixCapacity())
+            int currentProduced = this.GetCachedStoredMixCount() + this.CountMixInStore() + this.pendingMixOutput;
+            if (currentProduced + this.GetMixPerBatch() > this.GetCachedMaxMixCapacity())
             {
                 return false;
             }
@@ -324,7 +403,7 @@ namespace Manufactory.ConcreteMix
 
         private void CompleteBatch()
         {
-            ThingDef mixDef = DefDatabase<ThingDef>.GetNamedSilentFail(this.Props.outputDefName);
+            ThingDef mixDef = this.OutputDefCached;
             if (mixDef == null)
             {
                 Log.Warning($"[Manufactory] Missing concrete mix output def '{this.Props.outputDefName}'.");
@@ -347,6 +426,7 @@ namespace Manufactory.ConcreteMix
                     Thing overflowThing = ThingMaker.MakeThing(mixDef);
                     overflowThing.stackCount = overflow;
                     GenPlace.TryPlaceThing(overflowThing, this.GetDropCell(), this.parent.Map, ThingPlaceMode.Near);
+                    this.InvalidateStorageCache();
                 }
                 else
                 {
@@ -359,56 +439,70 @@ namespace Manufactory.ConcreteMix
 
         private int StoreProducedMixInMixerStorage(ThingDef mixDef, int count)
         {
-            if (count <= 0 || this.parent?.Map == null || !(this.parent is Building_Storage storage))
+            long perfStamp = ManufactoryPerf.Begin();
+            try
             {
-                return count;
-            }
-
-            List<IntVec3> slotCells = storage.AllSlotCellsList();
-            if (slotCells == null || slotCells.Count == 0)
-            {
-                return count;
-            }
-
-            int remaining = count;
-            int stackLimit = Math.Max(1, mixDef.stackLimit);
-            Map map = this.parent.Map;
-
-            // Fill existing concrete mix stacks first.
-            for (int i = 0; i < slotCells.Count && remaining > 0; i++)
-            {
-                List<Thing> things = slotCells[i].GetThingList(map);
-                for (int j = 0; j < things.Count && remaining > 0; j++)
+                if (count <= 0 || this.parent?.Map == null || !(this.parent is Building_Storage storage))
                 {
-                    Thing thing = things[j];
-                    if (thing == null || thing.def != mixDef || thing.stackCount >= stackLimit)
+                    return count;
+                }
+
+                List<IntVec3> slotCells = storage.AllSlotCellsList();
+                if (slotCells == null || slotCells.Count == 0)
+                {
+                    return count;
+                }
+
+                int remaining = count;
+                int stackLimit = Math.Max(1, mixDef.stackLimit);
+                Map map = this.parent.Map;
+                bool changed = false;
+
+                for (int i = 0; i < slotCells.Count && remaining > 0; i++)
+                {
+                    List<Thing> things = slotCells[i].GetThingList(map);
+                    for (int j = 0; j < things.Count && remaining > 0; j++)
                     {
-                        continue;
+                        Thing thing = things[j];
+                        if (thing == null || thing.def != mixDef || thing.stackCount >= stackLimit)
+                        {
+                            continue;
+                        }
+
+                        int add = Math.Min(remaining, stackLimit - thing.stackCount);
+                        thing.stackCount += add;
+                        remaining -= add;
+                        changed = true;
                     }
-
-                    int add = Math.Min(remaining, stackLimit - thing.stackCount);
-                    thing.stackCount += add;
-                    remaining -= add;
                 }
-            }
 
-            // Then use any open storage cell for new stacks.
-            for (int i = 0; i < slotCells.Count && remaining > 0; i++)
+                for (int i = 0; i < slotCells.Count && remaining > 0; i++)
+                {
+                    int spawnCount = Math.Min(remaining, stackLimit);
+                    Thing stack = ThingMaker.MakeThing(mixDef);
+                    stack.stackCount = spawnCount;
+                    if (GenPlace.TryPlaceThing(stack, slotCells[i], map, ThingPlaceMode.Direct))
+                    {
+                        remaining -= spawnCount;
+                        changed = true;
+                    }
+                    else if (!stack.Destroyed)
+                    {
+                        stack.Destroy(DestroyMode.Vanish);
+                    }
+                }
+
+                if (changed)
+                {
+                    this.InvalidateStorageCache();
+                }
+
+                return remaining;
+            }
+            finally
             {
-                int spawnCount = Math.Min(remaining, stackLimit);
-                Thing stack = ThingMaker.MakeThing(mixDef);
-                stack.stackCount = spawnCount;
-                if (GenPlace.TryPlaceThing(stack, slotCells[i], map, ThingPlaceMode.Direct))
-                {
-                    remaining -= spawnCount;
-                }
-                else if (!stack.Destroyed)
-                {
-                    stack.Destroy(DestroyMode.Vanish);
-                }
+                ManufactoryPerf.End("CompConcreteMixerFermenter.StoreProducedMixInMixerStorage", perfStamp);
             }
-
-            return remaining;
         }
 
         private void TryDropAllContentsToMap(Map map)
@@ -440,17 +534,6 @@ namespace Manufactory.ConcreteMix
             }
 
             return this.parent.Position;
-        }
-
-        private int GetBatchesWanted()
-        {
-            int missing = Math.Max(0, this.GetMaxMixCapacity() - this.TotalMixEquivalent);
-            if (missing <= 0)
-            {
-                return 0;
-            }
-
-            return Mathf.CeilToInt((float)missing / this.GetMixPerBatch());
         }
 
         private int GetPotentialMixFromInputs()
@@ -493,7 +576,7 @@ namespace Manufactory.ConcreteMix
 
         private int CountMixInStore()
         {
-            ThingDef mixDef = DefDatabase<ThingDef>.GetNamedSilentFail(this.Props.outputDefName);
+            ThingDef mixDef = this.OutputDefCached;
             if (mixDef == null)
             {
                 return 0;
@@ -515,7 +598,7 @@ namespace Manufactory.ConcreteMix
                 return 0;
             }
 
-            ThingDef mixDef = DefDatabase<ThingDef>.GetNamedSilentFail(this.Props.outputDefName);
+            ThingDef mixDef = this.OutputDefCached;
             if (mixDef == null)
             {
                 return 0;
@@ -652,9 +735,9 @@ namespace Manufactory.ConcreteMix
             return Math.Max(1, this.Props.maxInputChemfuel);
         }
 
-        private int GetMaxMixCapacity()
+        private int ComputeMaxMixCapacity()
         {
-            ThingDef mixDef = DefDatabase<ThingDef>.GetNamedSilentFail(this.Props.outputDefName);
+            ThingDef mixDef = this.OutputDefCached;
             if (mixDef == null)
             {
                 return Math.Max(1, this.Props.maxMixCapacity);
@@ -670,6 +753,36 @@ namespace Manufactory.ConcreteMix
             }
 
             return Math.Max(1, this.Props.maxMixCapacity);
+        }
+
+        private int GetCachedStoredMixCount()
+        {
+            this.RefreshStorageCacheIfNeeded(false);
+            return this.cachedStoredMixCount;
+        }
+
+        private int GetCachedMaxMixCapacity()
+        {
+            this.RefreshStorageCacheIfNeeded(false);
+            return this.cachedMaxMixCapacity;
+        }
+
+        private void RefreshStorageCacheIfNeeded(bool force)
+        {
+            int currentTick = Find.TickManager?.TicksGame ?? 0;
+            if (!force && currentTick < this.nextStorageScanTick)
+            {
+                return;
+            }
+
+            this.nextStorageScanTick = currentTick + StorageScanIntervalTicks;
+            this.cachedStoredMixCount = this.CountStoredMixInMixerStorage();
+            this.cachedMaxMixCapacity = this.ComputeMaxMixCapacity();
+        }
+
+        private void InvalidateStorageCache()
+        {
+            this.nextStorageScanTick = 0;
         }
     }
 }
