@@ -16,5 +16,5 @@ Thumbs.db
 Assemblies/*.dll
 Assemblies/*.pdb
 
-# Logs (if you ever copy them in)
+# Logs
 Player.log
