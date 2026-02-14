@@ -8,6 +8,7 @@ namespace Manufactory.ConcreteMix
     public class CompConcreteMixSetting : ThingComp
     {
         private int settingTicks;
+        private int lastUpdateTick = -1;
 
         public CompProperties_ConcreteMixSetting Props => (CompProperties_ConcreteMixSetting)this.props;
         public int SettingTicks => this.settingTicks;
@@ -16,10 +17,15 @@ namespace Manufactory.ConcreteMix
         {
             base.PostExposeData();
             Scribe_Values.Look(ref this.settingTicks, "settingTicks", 0);
+            Scribe_Values.Look(ref this.lastUpdateTick, "lastUpdateTick", -1);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 this.settingTicks = Mathf.Clamp(this.settingTicks, 0, this.GetSetTicks());
+                if (this.lastUpdateTick < 0)
+                {
+                    this.lastUpdateTick = Find.TickManager?.TicksGame ?? 0;
+                }
             }
         }
 
@@ -32,11 +38,26 @@ namespace Manufactory.ConcreteMix
                 return;
             }
 
+            int currentTick = Find.TickManager.TicksGame;
+            if (this.lastUpdateTick < 0)
+            {
+                this.lastUpdateTick = currentTick;
+                return;
+            }
+
+            int elapsedTicks = currentTick - this.lastUpdateTick;
+            if (elapsedTicks <= 0)
+            {
+                return;
+            }
+
+            this.lastUpdateTick = currentTick;
+
             if (this.IsStoredInMixerStorage())
             {
                 if (this.settingTicks > 0)
                 {
-                    this.settingTicks--;
+                    this.settingTicks = Math.Max(0, this.settingTicks - elapsedTicks);
                 }
 
                 return;
@@ -47,7 +68,7 @@ namespace Manufactory.ConcreteMix
                 return;
             }
 
-            this.settingTicks++;
+            this.settingTicks = Math.Min(this.GetSetTicks(), this.settingTicks + elapsedTicks);
             if (this.settingTicks >= this.GetSetTicks())
             {
                 this.ConvertIntoSlag();
@@ -63,6 +84,7 @@ namespace Manufactory.ConcreteMix
         public void SetSettingTicks(int ticks)
         {
             this.settingTicks = Mathf.Clamp(ticks, 0, this.GetSetTicks());
+            this.lastUpdateTick = Find.TickManager?.TicksGame ?? this.lastUpdateTick;
         }
 
         // Manual test checklist:
