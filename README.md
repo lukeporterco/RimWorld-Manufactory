@@ -39,7 +39,7 @@ Early development. Like, **VERY** early.
 ## Random Stuff (Skip if you don't care)
 Turns out RimWorld doesn't really have a way to change out TerrainDefs on a tick-based timer. You can kinda do that with ThingDefs, but it's basically impossible without a Harmony patch for TerrainDefs. So, I made a curing system that fixes that.
 
-The 8% walk speed boost to concrete flooring is meant to incentivize people to use it more, especially in factories. Also, Google says you walk faster on concrete so yeah ¯\_(ツ)_/¯
+The 8% walk speed boost to concrete flooring is meant to incentivize people to use it more, especially in factories. Also, Google says you walk faster on concrete so yeah ¯\\_(ツ)_/¯
 
 I'm considering making it so that machines/plants require concrete flooring to be placed down, like how VFE-Mechanoids factory flooring works. But a hardlock like that is honestly annoying, so I might just incentivize it by making factories more efficient if they're built on concrete.
 
