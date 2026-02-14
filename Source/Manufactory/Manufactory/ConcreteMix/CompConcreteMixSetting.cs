@@ -27,8 +27,18 @@ namespace Manufactory.ConcreteMix
         {
             base.CompTick();
 
-            if (this.parent.Destroyed || this.IsPausedInsideMixer())
+            if (this.parent.Destroyed)
             {
+                return;
+            }
+
+            if (this.IsStoredInMixerStorage())
+            {
+                if (this.settingTicks > 0)
+                {
+                    this.settingTicks--;
+                }
+
                 return;
             }
 
@@ -145,16 +155,25 @@ namespace Manufactory.ConcreteMix
             thing.Destroy(DestroyMode.Vanish);
         }
 
-        private bool IsPausedInsideMixer()
+        private bool IsStoredInMixerStorage()
         {
+            if (this.parent.Spawned && this.parent.Map != null)
+            {
+                SlotGroup slotGroup = this.parent.Position.GetSlotGroup(this.parent.Map);
+                if (slotGroup?.parent is Building_ConcreteMixer)
+                {
+                    return true;
+                }
+            }
+
+            // Legacy support for old mixer saves that still hold things in innerContainer.
             IThingHolder holder = this.parent.ParentHolder;
             while (holder != null)
             {
                 Building_ConcreteMixer concreteMixer = holder as Building_ConcreteMixer;
                 if (concreteMixer != null &&
                     concreteMixer.def != null &&
-                    concreteMixer.def.defName == this.Props.mixerDefName &&
-                    concreteMixer.Holds(this.parent))
+                    concreteMixer.def.defName == this.Props.mixerDefName)
                 {
                     return true;
                 }

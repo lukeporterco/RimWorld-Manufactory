@@ -78,6 +78,7 @@
     <Compile Include="Curing\CuringSettingsExtension.cs" />
     <Compile Include="Curing\MapComponent_CuringManager.cs" />
     <Compile Include="HarmonyInit.cs" />
+    <Compile Include="Patches\Patch_Thing_DrawAt.cs" />
     <Compile Include="Patches\Patch_TerrainGrid_SetTerrain.cs" />
     <Compile Include="Patches\Patch_Thing_SpawnSetup.cs" />
     <Compile Include="Patches\Patch_Thing_Stacking.cs" />
