@@ -7,7 +7,7 @@
     <graphicData>
       <texPath>Things/Item/Resource/ConcreteMix</texPath>
       <graphicClass>Graphic_StackCount</graphicClass>
-      <drawSize>(1.5,1.5)</drawSize>
+      <drawSize>(1.35,1.35)</drawSize>
       <color>(0.66,0.67,0.69)</color>
     </graphicData>
     <thingCategories>
@@ -36,8 +36,8 @@
     <label>concrete slag</label>
     <description>Over-set concrete mix that hardened into useless chunks.</description>
     <graphicData>
-      <texPath>Things/Item/Resource/Chemfuel</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
+      <texPath>Things/Item/Resource/ConcreteSlag</texPath>
+      <graphicClass>Graphic_StackCount</graphicClass>
       <drawSize>(1,1)</drawSize>
       <color>(0.50,0.50,0.50)</color>
     </graphicData>
