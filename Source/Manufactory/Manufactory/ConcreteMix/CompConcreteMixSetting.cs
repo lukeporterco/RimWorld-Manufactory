@@ -65,6 +65,7 @@ namespace Manufactory.ConcreteMix
 
             if (this.settingTicks >= this.GetSetTicks())
             {
+                this.ConvertIntoSlag();
                 return;
             }
 
