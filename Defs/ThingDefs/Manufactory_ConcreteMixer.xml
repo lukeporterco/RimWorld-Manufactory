@@ -8,7 +8,7 @@
     <graphicData>
       <texPath>Things/Building/Manufactory/ConcreteMixer/Concrete_Mixer</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(1.8,1.8)</drawSize>
+      <drawSize>(1.2,2.4)</drawSize>
       <color>(0.58,0.58,0.58)</color>
     </graphicData>
     <altitudeLayer>Building</altitudeLayer>
@@ -16,7 +16,7 @@
     <pathCost>15</pathCost>
     <fillPercent>0.5</fillPercent>
     <surfaceType>Item</surfaceType>
-    <size>(1,1)</size>
+    <size>(1,2)</size>
     <interactionCellOffset>(0,0,-1)</interactionCellOffset>
     <building>
       <isEdifice>false</isEdifice>
@@ -44,7 +44,7 @@
       <Beauty>-2</Beauty>
     </statBases>
     <costList>
-      <Steel>70</Steel>
+      <Steel>60</Steel>
       <ComponentIndustrial>2</ComponentIndustrial>
     </costList>
     <designationCategory>Production</designationCategory>
