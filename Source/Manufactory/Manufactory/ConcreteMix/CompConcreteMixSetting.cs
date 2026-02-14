@@ -160,7 +160,7 @@ namespace Manufactory.ConcreteMix
             if (this.parent.Spawned && this.parent.Map != null)
             {
                 SlotGroup slotGroup = this.parent.Position.GetSlotGroup(this.parent.Map);
-                if (slotGroup?.parent is Building_ConcreteMixer)
+                if (slotGroup?.parent is Building_ConcreteMixer mixer && mixer.IsReversalPowered())
                 {
                     return true;
                 }
@@ -173,7 +173,8 @@ namespace Manufactory.ConcreteMix
                 Building_ConcreteMixer concreteMixer = holder as Building_ConcreteMixer;
                 if (concreteMixer != null &&
                     concreteMixer.def != null &&
-                    concreteMixer.def.defName == this.Props.mixerDefName)
+                    concreteMixer.def.defName == this.Props.mixerDefName &&
+                    concreteMixer.IsReversalPowered())
                 {
                     return true;
                 }

@@ -80,5 +80,11 @@ namespace Manufactory.ConcreteMix
 
             this.innerContainer.TryDropAll(dropCell, this.Map, ThingPlaceMode.Near);
         }
+
+        public bool IsReversalPowered()
+        {
+            CompPowerTrader powerComp = this.GetComp<CompPowerTrader>();
+            return powerComp == null || powerComp.PowerOn;
+        }
     }
 }

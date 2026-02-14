@@ -56,6 +56,10 @@
     </inspectorTabs>
     <comps>
       <li Class="CompProperties_Forbiddable" />
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <basePowerConsumption>50</basePowerConsumption>
+      </li>
     </comps>
   </ThingDef>
 </Defs>
