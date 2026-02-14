@@ -9,6 +9,7 @@ namespace Manufactory.Curing
         public const string ConcreteMixDefName = "Manufactory_ConcreteMix";
         public const string ConcreteSlagDefName = "Manufactory_ConcreteSlag";
         public const string ConcreteMixerDefName = "Manufactory_ConcreteMixer";
+        public const string ConcreteMixerInputHaulJobDefName = "Manufactory_HaulToConcreteMixerInput";
         public const int DefaultCureTicks = 60000;
     }
 }

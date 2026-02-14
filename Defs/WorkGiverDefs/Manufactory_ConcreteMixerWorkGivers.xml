@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <WorkGiverDef>
+    <defName>Manufactory_HaulToConcreteMixerInput</defName>
+    <label>haul to concrete mixer</label>
+    <verb>haul to concrete mixer</verb>
+    <giverClass>Manufactory.ConcreteMix.WorkGiver_HaulToConcreteMixerInput</giverClass>
+    <workType>Hauling</workType>
+    <gerund>hauling concrete ingredients</gerund>
+    <scanThings>true</scanThings>
+    <priorityInType>95</priorityInType>
+    <requiredCapacities>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </WorkGiverDef>
+</Defs>

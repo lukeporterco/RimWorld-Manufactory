@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>Manufactory_HaulToConcreteMixerInput</defName>
+    <driverClass>Manufactory.ConcreteMix.JobDriver_HaulToConcreteMixerInput</driverClass>
+    <reportString>Hauling ingredients to concrete mixer.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+    <checkOverrideOnDamage>Always</checkOverrideOnDamage>
+    <playerInterruptible>true</playerInterruptible>
+  </JobDef>
+</Defs>

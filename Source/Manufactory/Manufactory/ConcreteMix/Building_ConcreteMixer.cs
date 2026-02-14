@@ -63,6 +63,11 @@ namespace Manufactory.ConcreteMix
         public void GetChildHolders(List<IThingHolder> outChildren)
         {
             ThingOwnerUtility.AppendThingHoldersFromThings(outChildren, this.GetDirectlyHeldThings());
+            CompConcreteMixerFermenter fermenter = this.GetComp<CompConcreteMixerFermenter>();
+            if (fermenter != null)
+            {
+                outChildren.Add(fermenter);
+            }
         }
 
         private void TryMigrateLegacyContents()

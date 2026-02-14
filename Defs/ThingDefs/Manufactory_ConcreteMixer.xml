@@ -16,6 +16,7 @@
     <pathCost>15</pathCost>
     <fillPercent>0.5</fillPercent>
     <surfaceType>Item</surfaceType>
+    <tickerType>Normal</tickerType>
     <size>(1,2)</size>
     <interactionCellOffset>(0,0,-1)</interactionCellOffset>
     <building>
@@ -59,6 +60,16 @@
       <li Class="CompProperties_Power">
         <compClass>CompPowerTrader</compClass>
         <basePowerConsumption>50</basePowerConsumption>
+      </li>
+      <li Class="Manufactory.ConcreteMix.CompProperties_ConcreteMixerFermenter">
+        <batchDurationTicks>2500</batchDurationTicks>
+        <mixPerBatch>20</mixPerBatch>
+        <chunkPerBatch>1</chunkPerBatch>
+        <chemfuelPerBatch>5</chemfuelPerBatch>
+        <maxInputChunks>5</maxInputChunks>
+        <maxInputChemfuel>20</maxInputChemfuel>
+        <maxMixCapacity>200</maxMixCapacity>
+        <outputDefName>Manufactory_ConcreteMix</outputDefName>
       </li>
     </comps>
   </ThingDef>

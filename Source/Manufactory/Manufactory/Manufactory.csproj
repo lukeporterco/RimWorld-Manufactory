@@ -72,8 +72,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConcreteMix\Building_ConcreteMixer.cs" />
+    <Compile Include="ConcreteMix\CompConcreteMixerFermenter.cs" />
     <Compile Include="ConcreteMix\CompConcreteMixSetting.cs" />
+    <Compile Include="ConcreteMix\CompProperties_ConcreteMixerFermenter.cs" />
     <Compile Include="ConcreteMix\CompProperties_ConcreteMixSetting.cs" />
+    <Compile Include="ConcreteMix\JobDriver_HaulToConcreteMixerInput.cs" />
+    <Compile Include="ConcreteMix\WorkGiver_HaulToConcreteMixerInput.cs" />
     <Compile Include="Curing\CuringDefs.cs" />
     <Compile Include="Curing\CuringSettingsExtension.cs" />
     <Compile Include="Curing\MapComponent_CuringManager.cs" />
